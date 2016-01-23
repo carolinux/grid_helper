@@ -20,13 +20,19 @@ def draw_line_on_picture(pic, line):
 
 parts = []
 main_pic = None 
-lw = 3
 
 colors=[[255,0,0],[0,255,0],[0,0,255],[255,255,255]]
 
+lws = [3,2,1]
 def get_color(idx):
 
     return colors[idx % len(colors)]
+
+def get_line_width(idx):
+    if idx<len(lws):
+        return lws[idx]
+    else:
+        return lws[-1]
 
 
 def divide(x,y):
@@ -40,7 +46,8 @@ def divide(x,y):
             mx = rect.bottomx + (rect.topx - rect.bottomx)/2
             my = rect.bottomy + (rect.topy - rect.bottomy)/2
             new_hierarchy = rect.hierarchy + 1
-            color = get_color(new_hierarchy)
+            color = get_color(new_hierarchy-1)
+            lw = get_line_width(new_hierarchy-1)
             line1 = Line(mx,rect.bottomy,mx,rect.topy, lw,color)
             line2 = Line(rect.bottomx,my,rect.topx,my, lw,color)
             print line1, line2
