@@ -53,13 +53,25 @@ def divide(x,y):
             parts.append(Rect(mx,rect.bottomy,rect.topx, my, new_hierarchy))
             return
 
+curr_event=None
 
 def onclick(event):
     print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
         event.button, event.x, event.y, event.xdata, event.ydata)
-    #plt.close('all')
-    divide(event.xdata, event.ydata)
+    global curr_event
+    curr_event = event
+    plt.close('all')
+    #divide(event.xdata, event.ydata)
+    #plot()
+
+def handle_event():
+    global curr_event
+    if curr_event is not None:
+        divide(curr_event.xdata, curr_event.ydata)
+    curr_event = None
     plot()
+    if curr_event is not None:
+        handle_event()
 
 def plot():
     fig = plt.figure()
@@ -77,7 +89,7 @@ def main(args):
     print("Size {}".format(main_pic.shape))
     parts = [Rect(0,0,main_pic.shape[1], main_pic.shape[0],0)]
     divide(1,1)
-    plot()
+    handle_event()
 
 
 if __name__ == '__main__':
