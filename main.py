@@ -27,8 +27,7 @@ def draw_line_on_picture(pic, line):
 
 parts = []
 main_pic = None 
-
-colors=[[255,0,0],[0,255,0],[0,0,255],[255,255,255]]
+colors=[[255,0,0],[0,255,0],[255,255,0],[255,255,255]]
 
 lws = [3,2,1]
 def get_color(idx):
@@ -108,4 +107,7 @@ def main(args):
 
 
 if __name__ == '__main__':
+    if len(sys.argv)<2:
+        print("Usage: python main.py image.png")
+        sys.exit(1)
     main(sys.argv[1:])
