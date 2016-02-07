@@ -10,10 +10,17 @@ Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
 
 
 def draw_line_on_picture(pic, line):
+    c2 = line.color
     if line.sx == line.ex:
-        pic[line.sy:line.ey,line.sx: line.sx+line.width] = line.color
+        for j in range(line.sy, line.ey):
+            for i in range(line.sx, line.sx+line.width+1):
+                c1 = pic[j][i]
+                pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
     elif line.sy == line.ey:
-        pic[line.sy:line.sy+line.width,line.sx: line.ex] = line.color
+        for j in range(line.sy, line.sy+line.width+1):
+            for i in range(line.sx, line.ex):
+                c1 = pic[j][i]
+                pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
     else:
         raise Exception("Non straight lines not supported") # fuck homophobia tho
     return pic
@@ -63,6 +70,7 @@ def divide(x,y):
 curr_event=None
 
 def onclick(event):
+    print event
     print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
         event.button, event.x, event.y, event.xdata, event.ydata)
     global curr_event
