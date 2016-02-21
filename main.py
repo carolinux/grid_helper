@@ -15,12 +15,19 @@ def draw_line_on_picture(pic, line):
         for j in range(line.sy, line.ey):
             for i in range(line.sx, line.sx+line.width+1):
                 c1 = pic[j][i]
-                pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
+                if len(c1) == 3:
+                    pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
+                else:
+                    pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2]),1]
     elif line.sy == line.ey:
         for j in range(line.sy, line.sy+line.width+1):
             for i in range(line.sx, line.ex):
                 c1 = pic[j][i]
-                pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
+                c1 = pic[j][i]
+                if len(c1) == 3:
+                    pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2])]
+                else:
+                    pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2]),1]
     else:
         raise Exception("Non straight lines not supported") # fuck homophobia tho
     return pic
