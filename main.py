@@ -8,16 +8,27 @@ import skimage.io as io
 from skimage import color
 from skimage import exposure
 import colorsys
+from skimage.filter import roberts, sobel, scharr, prewitt
 
 
 Line = namedtuple("Line","sx sy ex ey width color")
 Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
+
+
+def to_rgb3a(im):
+    # we can use the same array 3 times
+    return np.dstack([im] * 3)
 
 def do_brighten(pic):
     return exposure.adjust_gamma(pic,0.7)
 
 def do_darken(pic):
     return exposure.adjust_gamma(pic,1.3)
+
+def edge_detect(pic):
+    edges = scharr(color.rgb2grey(pic))
+    #return edges
+    return to_rgb3a(edges)
 
 def draw_line_on_picture(pic, line):
     c2 = line.color
@@ -126,6 +137,8 @@ def handle_event():
         main_pic = do_brighten(main_pic)
     if command == "darken":
         main_pic = do_darken(main_pic)
+    if command == "edge":
+        main_pic = edge_detect(main_pic)
     if command == "undo":
         print "Undoing"
         print len(history)
@@ -158,6 +171,12 @@ def main(args):
     imagePath = args[0] #"/home/carolinux/Pictures/artwerk.jpg"
     main_pic = io.imread(imagePath)
     print("Size {}".format(main_pic.shape))
+    h =  main_pic.shape[0]
+    w = main_pic.shape[1]
+    if h>w:
+        print("Width to Height 1 to  {}".format(h*1.0/w))
+    else:
+        print("Height to Width  1 to  {}".format(w*1.0/h))
     parts = [Rect(0,0,main_pic.shape[1], main_pic.shape[0],0)]
     divide(1,1)
     handle_event()
