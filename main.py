@@ -1,7 +1,9 @@
 from matplotlib import pyplot as plt
 from collections import namedtuple
 import sys
+import copy
 
+import numpy as np
 import skimage.io as io
 from skimage import color
 from skimage import exposure
@@ -42,8 +44,9 @@ def draw_line_on_picture(pic, line):
 
 parts = []
 main_pic = None 
-brighten = False
-darken = False
+history = []
+command = None
+command_meta = None
 colors=[[255,0,0],[0,255,0],[255,255,0],[255,255,255]]
 
 lws = [3,2,1]
@@ -83,46 +86,60 @@ def divide(x,y):
             parts.append(Rect(mx,rect.bottomy,rect.topx, my, new_hierarchy))
             return
 
-curr_event=None
 
 def onclick(event):
     print event
     print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
         event.button, event.x, event.y, event.xdata, event.ydata)
-    global curr_event
-    curr_event = event
+    global command
+    global command_meta
+    command="divide"
+    command_meta = event
     plt.close('all')
     #divide(event.xdata, event.ydata)
     #plot()
 
 
 def press(event):
-    global brighten
-    global darken
+    global command
     if event.key=="b":
-        brighten=True
-        plt.close('all')
+        command="brighten"
     if event.key=="d":
-        darken=True
+        command="darken"
+    if event.key=="e":
+        command="edge"
+    if event.key=="u":
+        command="undo"
+
+    if event.key in "d b u e".split():
         plt.close('all')
 
 def handle_event():
-    global curr_event
-    global brighten
-    global darken
+    global command
+    global command_meta
     global main_pic
-    if curr_event is not None:
-        divide(curr_event.xdata, curr_event.ydata)
-    if brighten:
-        main_pic = do_brighten(main_pic)
-    if darken:
-        main_pic = do_darken(main_pic)
+    global history
 
-    brighten = False
-    darken = False
-    curr_event = None
+    if command == "divide":
+        divide(command_meta.xdata, command_meta.ydata)
+    if command == "brighten":
+        main_pic = do_brighten(main_pic)
+    if command == "darken":
+        main_pic = do_darken(main_pic)
+    if command == "undo":
+        print "Undoing"
+        print len(history)
+        if len(history)>=2:
+            main_pic,cmd = history[-2]
+            print cmd
+            history = history[:-1]
+
+    if command!="undo":
+        history.append((np.copy(main_pic),command))
+    command = None
+    command_meta = None
     plot()
-    if curr_event is not None or brighten or darken:
+    if command is not None:
         handle_event()
 
 def plot():
