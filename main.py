@@ -3,11 +3,19 @@ from collections import namedtuple
 import sys
 
 import skimage.io as io
+from skimage import color
+from skimage import exposure
+import colorsys
 
 
 Line = namedtuple("Line","sx sy ex ey width color")
 Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
 
+def do_brighten(pic):
+    return exposure.adjust_gamma(pic,0.7)
+
+def do_darken(pic):
+    return exposure.adjust_gamma(pic,1.3)
 
 def draw_line_on_picture(pic, line):
     c2 = line.color
@@ -34,6 +42,8 @@ def draw_line_on_picture(pic, line):
 
 parts = []
 main_pic = None 
+brighten = False
+darken = False
 colors=[[255,0,0],[0,255,0],[255,255,0],[255,255,255]]
 
 lws = [3,2,1]
@@ -85,13 +95,34 @@ def onclick(event):
     #divide(event.xdata, event.ydata)
     #plot()
 
+
+def press(event):
+    global brighten
+    global darken
+    if event.key=="b":
+        brighten=True
+        plt.close('all')
+    if event.key=="d":
+        darken=True
+        plt.close('all')
+
 def handle_event():
     global curr_event
+    global brighten
+    global darken
+    global main_pic
     if curr_event is not None:
         divide(curr_event.xdata, curr_event.ydata)
+    if brighten:
+        main_pic = do_brighten(main_pic)
+    if darken:
+        main_pic = do_darken(main_pic)
+
+    brighten = False
+    darken = False
     curr_event = None
     plot()
-    if curr_event is not None:
+    if curr_event is not None or brighten or darken:
         handle_event()
 
 def plot():
@@ -99,6 +130,8 @@ def plot():
     ax = fig.add_subplot(111)
 
     cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    cid2 = fig.canvas.mpl_connect('key_press_event', press)
+
     plt.imshow(main_pic)
     plt.show()
 
