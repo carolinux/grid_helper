@@ -16,6 +16,7 @@ Line = namedtuple("Line","sx sy ex ey width color")
 Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
 fig = None
 patch = None
+orientation = None
 
 
 def to_rgb3a(im):
@@ -160,9 +161,12 @@ def handle_event():
 
         else:
             # create patch
-            w_to_h = 3/1.0
+            if orientation=="portrait":
+                w_to_h = 14.8/20.8
+            else:
+                w_to_h = 20.8/14.8
             shape = main_pic.shape
-            border = 5
+            border = 15
             hp = shape[0] - border
             wp = shape[1] - border
 
@@ -215,7 +219,12 @@ def plot(patch=None):
 def main(args):
     global parts
     global main_pic
+    global orientation
     imagePath = args[0] #"/home/carolinux/Pictures/artwerk.jpg"
+    if len(args)>1:
+        orientation = args[1]
+    else:
+        orientation = "portrait"
     main_pic = io.imread(imagePath)
     print("Size {}".format(main_pic.shape))
     h =  main_pic.shape[0]
@@ -230,6 +239,6 @@ def main(args):
 
 if __name__ == '__main__':
     if len(sys.argv)<2:
-        print("Usage: python main.py image.png")
+        print("Usage: python main.py image.png [portrait or landscape]")
         sys.exit(1)
     main(sys.argv[1:])
