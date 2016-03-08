@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from matplotlib.patches import Rectangle
 from collections import namedtuple
 import sys
 import copy
@@ -13,6 +14,8 @@ from skimage.filter import roberts, sobel, scharr, prewitt
 
 Line = namedtuple("Line","sx sy ex ey width color")
 Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
+fig = None
+patch = None
 
 
 def to_rgb3a(im):
@@ -75,6 +78,9 @@ def get_line_width(idx):
 def divide(x,y):
     global parts
     global main_pic
+    if not parts:
+        parts =[Rect(0,0,main_pic.shape[1], main_pic.shape[0],0)]
+
     #import ipdb; idb.set_trace()
     # find relevant part and split it in four
     for i,rect in enumerate(parts):
@@ -113,6 +119,7 @@ def onclick(event):
 
 def press(event):
     global command
+    global command_meta
     if event.key=="b":
         command="brighten"
     if event.key=="d":
@@ -121,8 +128,9 @@ def press(event):
         command="edge"
     if event.key=="u":
         command="undo"
-
-    if event.key in "d b u e".split():
+    if event.key=="c": # do cropping before you make a grid
+        command="crop"
+    if event.key in "d b u e c".split():
         plt.close('all')
 
 def handle_event():
@@ -130,6 +138,7 @@ def handle_event():
     global command_meta
     global main_pic
     global history
+    global patch
 
     if command == "divide":
         divide(command_meta.xdata, command_meta.ydata)
@@ -139,6 +148,32 @@ def handle_event():
         main_pic = do_darken(main_pic)
     if command == "edge":
         main_pic = edge_detect(main_pic)
+    if command == "crop":
+        if patch is not None:
+            # apply patch
+            # crop main_pic
+            h = patch.get_height()
+            w = patch.get_width()
+            w1,h1 = patch.get_xy()
+            main_pic = main_pic[slice(h1,h1+h),slice(w1,w1+w),slice(None)]
+            patch=None
+
+        else:
+            # create patch
+            w_to_h = 3/1.0
+            shape = main_pic.shape
+            border = 5
+            hp = shape[0] - border
+            wp = shape[1] - border
+
+            if w_to_h * hp >wp:
+                tw = wp
+                th = wp / w_to_h 
+            else:
+                th = hp
+                tw = w_to_h * hp
+            print th,tw
+            patch = Rectangle((0,0), tw, th, edgecolor='magenta', alpha=1, facecolor='none')
     if command == "undo":
         print "Undoing"
         print len(history)
@@ -149,13 +184,22 @@ def handle_event():
 
     if command!="undo":
         history.append((np.copy(main_pic),command))
+    if command!="crop":
+        patch = None
     command = None
     command_meta = None
-    plot()
+    plot(patch=patch)
     if command is not None:
         handle_event()
 
-def plot():
+def drag(event):
+    if event.xdata is None or event.ydata is None:
+        return
+    patch.set_xy((event.xdata,event.ydata))
+    fig.canvas.draw()
+
+def plot(patch=None):
+    global fig
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -163,6 +207,9 @@ def plot():
     cid2 = fig.canvas.mpl_connect('key_press_event', press)
 
     plt.imshow(main_pic)
+    if patch:
+        ax.add_patch(patch)
+        cid3 = fig.canvas.mpl_connect('motion_notify_event', drag)
     plt.show()
 
 def main(args):
@@ -177,8 +224,7 @@ def main(args):
         print("Width to Height 1 to  {}".format(h*1.0/w))
     else:
         print("Height to Width  1 to  {}".format(w*1.0/h))
-    parts = [Rect(0,0,main_pic.shape[1], main_pic.shape[0],0)]
-    divide(1,1)
+    parts = []
     handle_event()
 
 
