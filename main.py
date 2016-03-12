@@ -17,6 +17,7 @@ Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
 fig = None
 patch = None
 orientation = None
+click_handlers = True
 
 
 def to_rgb3a(im):
@@ -129,9 +130,11 @@ def press(event):
         command="edge"
     if event.key=="u":
         command="undo"
+    if event.key=="z":
+        command="zoom"
     if event.key=="c": # do cropping before you make a grid
         command="crop"
-    if event.key in "d b u e c".split():
+    if event.key in "d b u e c z".split():
         plt.close('all')
 
 def handle_event():
@@ -140,11 +143,14 @@ def handle_event():
     global main_pic
     global history
     global patch
+    global click_handlers
 
     if command == "divide":
         divide(command_meta.xdata, command_meta.ydata)
     if command == "brighten":
         main_pic = do_brighten(main_pic)
+    if command == "zoom":
+        click_handlers = not click_handlers
     if command == "darken":
         main_pic = do_darken(main_pic)
     if command == "edge":
@@ -192,7 +198,7 @@ def handle_event():
         patch = None
     command = None
     command_meta = None
-    plot(patch=patch)
+    plot(patch=patch, click_handlers=click_handlers)
     if command is not None:
         handle_event()
 
@@ -202,12 +208,13 @@ def drag(event):
     patch.set_xy((event.xdata,event.ydata))
     fig.canvas.draw()
 
-def plot(patch=None):
+def plot(patch=None,click_handlers=True):
     global fig
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    cid = fig.canvas.mpl_connect('button_press_event', onclick)
+    if click_handlers:
+        cid = fig.canvas.mpl_connect('button_press_event', onclick)
     cid2 = fig.canvas.mpl_connect('key_press_event', press)
 
     plt.imshow(main_pic)
