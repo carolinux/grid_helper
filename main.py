@@ -20,6 +20,9 @@ patch = None
 orientation = None
 click_handlers = True
 filename = None
+ax = None
+# global object
+G = {}
 
 
 def to_rgb3a(im):
@@ -109,6 +112,8 @@ def divide(x,y):
 
 
 def onclick(event):
+    global G
+    G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
     print event
     print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
         event.button, event.x, event.y, event.xdata, event.ydata)
@@ -131,9 +136,9 @@ def save():
     i=1
     while True:
         newfn = os.path.join(folder,"{}_gridded{}{}".format(name,i,ext))
-        print newfn
         if not os.path.exists(newfn):
             plt.savefig(newfn, bbox_inches='tight', pad_inches=0.0)
+            print newfn
             return
         i+=1
 
@@ -156,6 +161,8 @@ def press(event):
     if event.key=="c": # do cropping before you make a grid
         command="crop"
     if event.key in "b d e u z c".split(" "):
+        global G
+        G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
         plt.close("all")
 
 def handle_event():
@@ -231,6 +238,8 @@ def drag(event):
 
 def plot(patch=None,click_handlers=True):
     global fig
+    global ax
+    global G
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
@@ -242,7 +251,10 @@ def plot(patch=None,click_handlers=True):
     if patch:
         ax.add_patch(patch)
         cid3 = fig.canvas.mpl_connect('motion_notify_event', drag)
-    #fig.canvas.draw()
+    if "plot_geometry" in G:
+        plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
+    else:
+        print "naaa"
     plt.show()
 
 def main(args):
