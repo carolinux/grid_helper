@@ -137,7 +137,8 @@ def save():
     while True:
         newfn = os.path.join(folder,"{}_gridded{}{}".format(name,i,ext))
         if not os.path.exists(newfn):
-            plt.savefig(newfn, bbox_inches='tight', pad_inches=0.0)
+            #plt.savefig(newfn, bbox_inches='tight', pad_inches=0.0)
+            io.imsave(newfn, main_pic)
             print newfn
             return
         i+=1
@@ -146,7 +147,8 @@ def save():
 def press(event):
     global command
     global command_meta
-    if event.key=="s":
+    if event.key=="o": # o for out
+        # seems s is already a shortcut for matplotlib
         save()
     if event.key=="b":
         command="brighten"
@@ -253,8 +255,6 @@ def plot(patch=None,click_handlers=True):
         cid3 = fig.canvas.mpl_connect('motion_notify_event', drag)
     if "plot_geometry" in G:
         plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
-    else:
-        print "naaa"
     plt.show()
 
 def main(args):
