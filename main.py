@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle
 from collections import namedtuple
 import sys
+import os
 import copy
 
 import numpy as np
@@ -18,6 +19,7 @@ fig = None
 patch = None
 orientation = None
 click_handlers = True
+filename = None
 
 
 def to_rgb3a(im):
@@ -118,10 +120,29 @@ def onclick(event):
     #divide(event.xdata, event.ydata)
     #plot()
 
+def fileparts(fn):
+    path = os.path.dirname(fn)
+    basename = os.path.basename(fn)
+    name,ext = os.path.splitext(basename)
+    return (path,name,ext)
+
+def save():
+    folder,name,ext = fileparts(filename)
+    i=1
+    while True:
+        newfn = os.path.join(folder,"{}_gridded{}{}".format(name,i,ext))
+        print newfn
+        if not os.path.exists(newfn):
+            plt.savefig(newfn, bbox_inches='tight', pad_inches=0.0)
+            return
+        i+=1
+
 
 def press(event):
     global command
     global command_meta
+    if event.key=="s":
+        save()
     if event.key=="b":
         command="brighten"
     if event.key=="d":
@@ -134,8 +155,8 @@ def press(event):
         command="zoom"
     if event.key=="c": # do cropping before you make a grid
         command="crop"
-    if event.key in "d b u e c z".split():
-        plt.close('all')
+    if event.key in "b d e u z c".split(" "):
+        plt.close("all")
 
 def handle_event():
     global command
@@ -221,18 +242,20 @@ def plot(patch=None,click_handlers=True):
     if patch:
         ax.add_patch(patch)
         cid3 = fig.canvas.mpl_connect('motion_notify_event', drag)
+    #fig.canvas.draw()
     plt.show()
 
 def main(args):
     global parts
     global main_pic
     global orientation
-    imagePath = args[0] #"/home/carolinux/Pictures/artwerk.jpg"
+    global filename
+    filename = args[0] #"/home/carolinux/Pictures/artwerk.jpg"
     if len(args)>1:
         orientation = args[1]
     else:
         orientation = "portrait"
-    main_pic = io.imread(imagePath)
+    main_pic = io.imread(filename)
     print("Size {}".format(main_pic.shape))
     h =  main_pic.shape[0]
     w = main_pic.shape[1]
