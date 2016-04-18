@@ -60,7 +60,7 @@ def draw_line_on_picture(pic, line):
                 else:
                     pic[j][i] = [0.5*(c1[0]+c2[0]),0.5*(c1[1]+c2[1]),0.5*(c1[2]+c2[2]),1]
     else:
-        raise Exception("Non straight lines not supported") # fuck homophobia tho
+        raise Exception("Non straight lines not supported")
     return pic
 
 parts = []
@@ -69,6 +69,7 @@ history = []
 command = None
 command_meta = None
 colors=[[255,0,0],[0,255,0],[255,255,0],[255,255,255]]
+magenta = [255,0,255]
 
 lws = [3,2,1]
 def get_color(idx):
@@ -152,6 +153,10 @@ def press(event):
         save()
     if event.key=="b":
         command="brighten"
+    if event.key=="v":
+        command="vertical_line"
+    if event.key=="h":
+        command="horizontal_line"
     if event.key=="d":
         command="darken"
     if event.key=="e":
@@ -162,8 +167,9 @@ def press(event):
         command="zoom"
     if event.key=="c": # do cropping before you make a grid
         command="crop"
-    if event.key in "b d e u z c".split(" "):
+    if event.key in "b d e u z c v h".split(" "):
         global G
+        # save state of plot
         G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
         plt.close("all")
 
@@ -174,6 +180,22 @@ def handle_event():
     global history
     global patch
     global click_handlers
+
+    if command=="horizontal_line" or command=="vertical_line":
+        h,w = main_pic.shape[:2]
+        if patch is not None:
+            w1,h1 = patch.get_xy()
+            if command=="horizontal_line":
+                line = Line(0,int(h1),w,int(h1), patch.get_height(), magenta)
+            else:
+                line = Line(int(w1),0,int(w1),h, patch.get_width(), magenta)
+            main_pic = draw_line_on_picture(main_pic, line)
+            patch=None
+        else:
+            if command=="horizontal_line":
+                patch = Rectangle((0,0), w, 1, edgecolor='magenta', alpha=1)
+            else:
+                patch = Rectangle((0,0), 1, h, edgecolor='magenta', alpha=1)
 
     if command == "divide":
         divide(command_meta.xdata, command_meta.ydata)
@@ -224,7 +246,7 @@ def handle_event():
 
     if command!="undo":
         history.append((np.copy(main_pic),command))
-    if command!="crop":
+    if command not in ["crop","horizontal_line","vertical_line"]:
         patch = None
     command = None
     command_meta = None
@@ -235,7 +257,8 @@ def handle_event():
 def drag(event):
     if event.xdata is None or event.ydata is None:
         return
-    patch.set_xy((event.xdata,event.ydata))
+    if patch:
+        patch.set_xy((event.xdata,event.ydata))
     fig.canvas.draw()
 
 def plot(patch=None,click_handlers=True):
