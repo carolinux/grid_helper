@@ -23,6 +23,7 @@ filename = None
 ax = None
 # global object
 G = {}
+G["needle"] = {}
 
 
 def to_rgb3a(im):
@@ -114,6 +115,13 @@ def divide(x,y):
 
 def onclick(event):
     global G
+    print G["needle"]
+    if "active" in  G["needle"] and "pt1" in G["needle"]:
+        G["needle"]["pt2"] = (event.x, event.y)
+        return
+    elif "active" in G["needle"]:
+        G["needle"]["pt1"] = (event.x, event.y)
+        return
     G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
     print event
     print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(
@@ -153,6 +161,8 @@ def press(event):
         save()
     if event.key=="b":
         command="brighten"
+    if event.key=="n":
+        command="needle"
     if event.key=="v":
         command="vertical_line"
     if event.key=="h":
@@ -167,7 +177,7 @@ def press(event):
         command="zoom"
     if event.key=="c": # do cropping before you make a grid
         command="crop"
-    if event.key in "b d e u z c v h".split(" "):
+    if event.key in "b d e u z c v h n".split(" "):
         global G
         # save state of plot
         G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
@@ -180,6 +190,7 @@ def handle_event():
     global history
     global patch
     global click_handlers
+    global G
 
     if command=="horizontal_line" or command=="vertical_line":
         h,w = main_pic.shape[:2]
@@ -196,6 +207,31 @@ def handle_event():
                 patch = Rectangle((0,0), w, 1, edgecolor='magenta', alpha=1)
             else:
                 patch = Rectangle((0,0), 1, h, edgecolor='magenta', alpha=1)
+
+    if command=="needle":
+        G["needle"]["active"] = True
+        just_added_patch = False
+        if "pt1" in G["needle"] and "pt2" in G["needle"]: 
+            if patch is None:
+                print "Drawing needle patch"
+                pt1 = G["needle"]["pt1"]
+                pt2 = G["needle"]["pt2"]
+                patch = Rectangle((pt1[0],pt1[1]), abs(pt2[0]-pt1[0]), abs(pt2[1]-pt1[1]), edgecolor='magenta', alpha=1, facecolor='magenta')
+                just_added_patch = True
+        if patch is not None and not just_added_patch:
+            print "finalize"
+            w1,h1 = patch.get_xy()
+            w = patch.get_width()
+            h = patch.get_height()
+
+            if w>h:
+                print("horizontal patch")
+                line = Line(int(w1),int(h1),int(w1+w),int(h1), 3, magenta)
+            else:
+                line = Line(int(w1),int(h1),int(w1),int(h1+h), 3, magenta)
+
+            main_pic = draw_line_on_picture(main_pic, line)
+            G["needle"] = {}
 
     if command == "divide":
         divide(command_meta.xdata, command_meta.ydata)
@@ -246,7 +282,7 @@ def handle_event():
 
     if command!="undo":
         history.append((np.copy(main_pic),command))
-    if command not in ["crop","horizontal_line","vertical_line"]:
+    if command not in ["crop","horizontal_line","vertical_line","needle"]:
         patch = None
     command = None
     command_meta = None
