@@ -255,10 +255,11 @@ def handle_event():
 
         else:
             # create patch
+            portrait_ratio = 14.8/20.8
             if orientation=="portrait":
-                w_to_h = 14.8/20.8
+                w_to_h = portrait_ratio
             else:
-                w_to_h = 20.8/14.8
+                w_to_h = 1.0/portrait_ratio
             shape = main_pic.shape
             border = 15
             hp = shape[0] - border
