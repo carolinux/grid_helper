@@ -197,9 +197,9 @@ def handle_event():
         if patch is not None:
             w1,h1 = patch.get_xy()
             if command=="horizontal_line":
-                line = Line(0,int(h1),w,int(h1), patch.get_height(), magenta)
+                line = Line(0,int(h1),w,int(h1), int(patch.get_height()), magenta)
             else:
-                line = Line(int(w1),0,int(w1),h, patch.get_width(), magenta)
+                line = Line(int(w1),0,int(w1),h, int(patch.get_width()), magenta)
             main_pic = draw_line_on_picture(main_pic, line)
             patch=None
         else:
