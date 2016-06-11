@@ -177,7 +177,9 @@ def press(event):
         command="zoom"
     if event.key=="c": # do cropping before you make a grid
         command="crop"
-    if event.key in "b d e u z c v h n".split(" "):
+    if event.key=="r": # do cropping before you make a grid
+        command="resize_patch"
+    if event.key in "b d e u z c v h n r".split(" "):
         global G
         # save state of plot
         G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
@@ -243,6 +245,13 @@ def handle_event():
         main_pic = do_darken(main_pic)
     if command == "edge":
         main_pic = edge_detect(main_pic)
+    if command == "resize_patch":
+        if patch is not None:
+            h = patch.get_height()
+            w = patch.get_width()
+            patch.set_width(int(w/2))
+            patch.set_height(int(h/2))
+
     if command == "crop":
         if patch is not None:
             # apply patch
@@ -283,7 +292,7 @@ def handle_event():
 
     if command!="undo":
         history.append((np.copy(main_pic),command))
-    if command not in ["crop","horizontal_line","vertical_line","needle"]:
+    if command not in ["crop","horizontal_line","vertical_line","needle","resize_patch"]:
         patch = None
     command = None
     command_meta = None
