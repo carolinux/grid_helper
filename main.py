@@ -358,12 +358,12 @@ def determine_filename(fn):
     path_to_try = os.path.join(image_dir, fn)
     if os.path.exists(path_to_try):
         return path_to_try
-    pretty_file_list =  '\n'.join(os.listdir(image_dir))
+    pretty_file_list =  os.linesep.join(os.listdir(image_dir))
     fn_glob ="*"+fn+"*"
     matching_files = glob.glob(os.path.join(image_dir, fn_glob))
     if not matching_files:
-        raise Exception("Could not find file in {} that matches pattern {}. Available files \n {}".format(
-            image_dir, fn_glob, pretty_file_list))
+        raise Exception("Could not find file in {} that matches pattern {}. Available files {} {}".format(
+            image_dir, fn_glob, os.linesep, pretty_file_list))
     matching_files = sorted(matching_files, key=lambda x: "gridded" not in x)
     return matching_files[-1]
         
