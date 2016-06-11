@@ -6,13 +6,16 @@ import os
 import copy
 
 import numpy as np
+import json
+import glob
 import skimage.io as io
 from skimage import color
 from skimage import exposure
 import colorsys
 from skimage.filter import roberts, sobel, scharr, prewitt
 
-
+SETTINGS_FILE="settings.json"
+IMAGE_PATH="image_path"
 Line = namedtuple("Line","sx sy ex ey width color")
 Rect = namedtuple("Rect","bottomx bottomy topx topy hierarchy")
 fig = None
@@ -25,6 +28,9 @@ ax = None
 G = {}
 G["needle"] = {}
 
+def load_settings():
+    return dict(json.load(open(SETTINGS_FILE,'r')))
+    
 
 def to_rgb3a(im):
     # we can use the same array 3 times
@@ -264,6 +270,7 @@ def handle_event():
 
         else:
             # create patch
+            # TODO: can read this from settings :))
             portrait_ratio = 14.8/20.8
             if orientation=="portrait":
                 w_to_h = portrait_ratio
@@ -326,16 +333,13 @@ def plot(patch=None,click_handlers=True):
         plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
     plt.show()
 
-def main(args):
+def main(specified_filename, specified_orientation):
     global parts
     global main_pic
     global orientation
     global filename
-    filename = args[0] #"/home/carolinux/Pictures/artwerk.jpg"
-    if len(args)>1:
-        orientation = args[1]
-    else:
-        orientation = "portrait"
+    filename = specified_filename
+    orientation = specified_orientation
     main_pic = io.imread(filename)
     print("Size {}".format(main_pic.shape))
     h =  main_pic.shape[0]
@@ -347,9 +351,34 @@ def main(args):
     parts = []
     handle_event()
 
+def determine_filename(fn):
+    if os.path.exists(fn):
+        return fn
+    image_dir = settings[IMAGE_PATH]
+    path_to_try = os.path.join(image_dir, fn)
+    if os.path.exists(path_to_try):
+        return path_to_try
+    pretty_file_list =  '\n'.join(os.listdir(image_dir))
+    fn_glob ="*"+fn+"*"
+    matching_files = glob.glob(os.path.join(image_dir, fn_glob))
+    if not matching_files:
+        raise Exception("Could not find file in {} that matches pattern {}. Available files \n {}".format(
+            image_dir, fn_glob, pretty_file_list))
+    matching_files = sorted(matching_files, key=lambda x: "gridded" not in x)
+    return matching_files[-1]
+        
 
+
+
+settings  = load_settings()
 if __name__ == '__main__':
     if len(sys.argv)<2:
         print("Usage: python main.py image.png [portrait or landscape]")
         sys.exit(1)
-    main(sys.argv[1:])
+    if len(sys.argv)>1:
+        orientation = sys.argv[1]
+    else:
+        orientation = "portrait"
+    fn = determine_filename(sys.argv[1])
+    print fn
+    main(fn, orientation)
