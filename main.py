@@ -181,11 +181,13 @@ def press(event):
         command="undo"
     if event.key=="z":
         command="zoom"
-    if event.key=="c": # do cropping before you make a grid
+    if event.key=="c":
         command="crop"
-    if event.key=="r": # do cropping before you make a grid
+    if event.key=="r":
         command="resize_patch"
-    if event.key in "b d e u z c v h n r".split(" "):
+    if event.key=="m":
+        command="mirror"
+    if event.key in "b d e u z c v h n r m".split(" "):
         global G
         # save state of plot
         G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
@@ -245,6 +247,8 @@ def handle_event():
         divide(command_meta.xdata, command_meta.ydata)
     if command == "brighten":
         main_pic = do_brighten(main_pic)
+    if command == "mirror":
+	main_pic = np.fliplr(main_pic)
     if command == "zoom":
         click_handlers = not click_handlers
     if command == "darken":
