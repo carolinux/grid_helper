@@ -4,6 +4,7 @@ from collections import namedtuple
 import sys
 import os
 import copy
+import webbrowser
 
 import numpy as np
 import json
@@ -31,10 +32,15 @@ G["needle"] = {}
 def load_settings():
     return dict(json.load(open(SETTINGS_FILE,'r')))
     
+def open_color_ref(color_hex):
+   webbrowser.open("http://www.color-hex.com/color/"+color_hex)
 
 def to_rgb3a(im):
     # we can use the same array 3 times
     return np.dstack([im] * 3)
+
+def rgb_to_hex(pt):
+    return '%02x%02x%02x' % (pt[0], pt[1], pt[2])
 
 def do_brighten(pic):
     return exposure.adjust_gamma(pic,0.7)
@@ -169,6 +175,8 @@ def press(event):
         command="brighten"
     if event.key=="n":
         command="needle"
+    if event.key=="p":
+        command="pick"
     if event.key=="v":
         command="vertical_line"
     if event.key=="h":
@@ -201,6 +209,7 @@ def handle_event():
     global patch
     global click_handlers
     global G
+
 
     if command=="horizontal_line" or command=="vertical_line":
         h,w = main_pic.shape[:2]
