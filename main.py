@@ -268,8 +268,8 @@ def handle_event():
         if patch is not None:
             h = patch.get_height()
             w = patch.get_width()
-            patch.set_width(int(w/2))
-            patch.set_height(int(h/2))
+            patch.set_width(int(w * 0.9))
+            patch.set_height(int(h * 0.9))
 
     if command == "crop":
         if patch is not None:
