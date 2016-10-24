@@ -1,5 +1,7 @@
+from math import atan2, degrees, pi
+
 from matplotlib import pyplot as plt
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, ConnectionPatch, Polygon
 from collections import namedtuple
 import sys
 import os
@@ -28,6 +30,21 @@ ax = None
 # global object
 G = {}
 G["needle"] = {}
+G["px"] = None
+G["py"] = None
+patches = []
+
+def p(pt, delta=1):
+    return [pt[0]+delta, pt[1]+delta]
+
+def get_angle(pt1, pt2):
+    x1 = pt1[0]; x2 = pt2[0]
+    y1 = pt1[1]; y2 = pt2[1]
+    dx = x2 - x1
+    dy = y2 - y1
+    rads = atan2(-dy,dx)
+    rads %= 2*pi
+    return degrees(rads)
 
 def load_settings():
     return dict(json.load(open(SETTINGS_FILE,'r')))
@@ -129,10 +146,10 @@ def onclick(event):
     global G
     print G["needle"]
     if "active" in  G["needle"] and "pt1" in G["needle"]:
-        G["needle"]["pt2"] = (event.x, event.y)
+        G["needle"]["pt2"] = (event.xdata, event.ydata)
         return
     elif "active" in G["needle"]:
-        G["needle"]["pt1"] = (event.x, event.y)
+        G["needle"]["pt1"] = (event.xdata, event.ydata)
         return
     G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
     print event
@@ -175,6 +192,8 @@ def press(event):
         command="brighten"
     if event.key=="n":
         command="needle"
+    if event.key=="a":
+        command="angle_needle"
     if event.key=="p":
         command="pick"
     if event.key=="v":
@@ -195,7 +214,7 @@ def press(event):
         command="resize_patch"
     if event.key=="m":
         command="mirror"
-    if event.key in "b d e u z c v h n r m".split(" "):
+    if event.key in "a b d e u z c v h n r m".split(" "):
         global G
         # save state of plot
         G["plot_geometry"] = plt.get_current_fig_manager().window.geometry()
@@ -207,6 +226,7 @@ def handle_event():
     global main_pic
     global history
     global patch
+    global patches
     global click_handlers
     global G
 
@@ -227,7 +247,7 @@ def handle_event():
             else:
                 patch = Rectangle((0,0), 1, h, edgecolor='magenta', alpha=1)
 
-    if command=="needle":
+    if command=="needle" or command=="angle_needle":
         G["needle"]["active"] = True
         just_added_patch = False
         if "pt1" in G["needle"] and "pt2" in G["needle"]: 
@@ -235,21 +255,33 @@ def handle_event():
                 print "Drawing needle patch"
                 pt1 = G["needle"]["pt1"]
                 pt2 = G["needle"]["pt2"]
-                patch = Rectangle((pt1[0],pt1[1]), abs(pt2[0]-pt1[0]), abs(pt2[1]-pt1[1]), edgecolor='magenta', alpha=1, facecolor='magenta')
+                if command=="needle":
+                    patch = Rectangle((pt1[0], pt1[1]), abs(pt2[0]-pt1[0]), abs(pt2[1]-pt1[1]), edgecolor='magenta', alpha=1, facecolor='magenta')
+                else:
+                    patch = Polygon(np.array([pt1, pt2, p(pt1), p(pt2)]), closed=False,
+                            edgecolor='magenta', alpha=1, facecolor='magenta')
+                    angle = get_angle(pt1, pt2)
+                    print ("Angle :{}".format(angle)) 
+                    # how to add text?
                 just_added_patch = True
+
         if patch is not None and not just_added_patch:
-            print "finalize"
-            w1,h1 = patch.get_xy()
-            w = patch.get_width()
-            h = patch.get_height()
-
-            if w>h:
-                print("horizontal patch")
-                line = Line(int(w1),int(h1),int(w1+w),int(h1), 3, magenta)
+            if isinstance(patch, Polygon):
+                patches.append(patch)
+                patch=None
             else:
-                line = Line(int(w1),int(h1),int(w1),int(h1+h), 3, magenta)
+                print "finalize"
+                w1,h1 = patch.get_xy()
+                w = patch.get_width()
+                h = patch.get_height()
 
-            main_pic = draw_line_on_picture(main_pic, line)
+                if w>h:
+                    print("horizontal patch")
+                    line = Line(int(w1),int(h1),int(w1+w),int(h1), 3, magenta)
+                else:
+                    line = Line(int(w1),int(h1),int(w1),int(h1+h), 3, magenta)
+
+                main_pic = draw_line_on_picture(main_pic, line)
             G["needle"] = {}
 
     if command == "divide":
@@ -312,7 +344,7 @@ def handle_event():
 
     if command!="undo":
         history.append((np.copy(main_pic),command))
-    if command not in ["crop","horizontal_line","vertical_line","needle","resize_patch"]:
+    if command not in ["crop","horizontal_line","vertical_line","needle","angle_needle","resize_patch"]:
         patch = None
     command = None
     command_meta = None
@@ -323,7 +355,7 @@ def handle_event():
 def drag(event):
     if event.xdata is None or event.ydata is None:
         return
-    if patch:
+    if patch and isinstance(patch, Rectangle):
         patch.set_xy((event.xdata,event.ydata))
     fig.canvas.draw()
 
@@ -342,6 +374,8 @@ def plot(patch=None,click_handlers=True):
     if patch:
         ax.add_patch(patch)
         cid3 = fig.canvas.mpl_connect('motion_notify_event', drag)
+    for p in patches:
+        ax.add_patch(p)
     if "plot_geometry" in G:
         plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
     plt.show()
