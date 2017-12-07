@@ -98,7 +98,7 @@ main_pic = None
 history = []
 command = None
 command_meta = None
-colors=[[255,0,0],[0,255,0],[255,255,0],[255,255,255]]
+colors=[[255,0,0],[0,255,0],[0,0,0]]
 magenta = [255,0,255]
 
 lws = [3,2,1]
