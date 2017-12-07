@@ -15,7 +15,10 @@ import skimage.io as io
 from skimage import color
 from skimage import exposure
 import colorsys
-from skimage.filter import roberts, sobel, scharr, prewitt
+try:
+    from skimage.filter import roberts, sobel, scharr, prewitt
+except:
+    pass
 
 SETTINGS_FILE="settings.json"
 IMAGE_PATH="image_path"
@@ -377,7 +380,12 @@ def plot(patch=None,click_handlers=True):
     for p in patches:
         ax.add_patch(p)
     if "plot_geometry" in G:
-        plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
+        try:
+            #print("plot geom {}".format(G["plot_geometry"]))
+            #plt.get_current_fig_manager().window.setGeometry(G["plot_geometry"])
+            plt.get_current_fig_manager().window.wm_geometry(G["plot_geometry"])
+        except:
+            pass
     plt.show()
 
 def main(specified_filename, specified_orientation):
