@@ -98,11 +98,14 @@ def draw_line_on_picture(pic, line):
 
 parts = []
 main_pic = None 
+original_pic = None 
+bg_pic = None
 history = []
 command = None
 command_meta = None
-colors=[[255,0,0],[0,255,0],[0,0,0]]
+colors=[[255,0,0],[0,255,0],[0,255,255]]
 magenta = [255,0,255]
+lines = []
 
 lws = [3,2,1]
 def get_color(idx):
@@ -119,6 +122,7 @@ def get_line_width(idx):
 def divide(x,y):
     global parts
     global main_pic
+    global lines
     if not parts:
         parts =[Rect(0,0,main_pic.shape[1], main_pic.shape[0],0)]
 
@@ -135,6 +139,8 @@ def divide(x,y):
             line1 = Line(mx,rect.bottomy,mx,rect.topy, lw,color)
             line2 = Line(rect.bottomx,my,rect.topx,my, lw,color)
             print line1, line2
+            lines.append(line1)
+            lines.append(line2)
             main_pic = draw_line_on_picture(main_pic, line1)
             main_pic = draw_line_on_picture(main_pic, line2)
             parts.remove(rect)
@@ -193,8 +199,13 @@ def export_set_up():
     newfn = os.path.join(out_folder,"{}_gridded{}".format(name,ext))
     io.imsave(newfn, main_pic)
     # 2. output the original file
-
+    io.imsave(os.path.join(out_folder,"{}{}".format(name,ext)), original_pic)
     # 3. output just the grid on white
+    global lines
+    global bg_pic
+    for line in lines:
+        bg_pic = draw_line_on_picture(bg_pic, line)
+    io.imsave(os.path.join(out_folder,"{}_template{}".format(name,ext)), bg_pic)
 
 
 def press(event):
@@ -405,11 +416,16 @@ def plot(patch=None,click_handlers=True):
 def main(specified_filename, specified_orientation):
     global parts
     global main_pic
+    global bg_pic
+    global original_pic
     global orientation
     global filename
     filename = specified_filename
     orientation = specified_orientation
     main_pic = io.imread(filename)
+    original_pic = io.imread(filename)
+    bg_pic = io.imread(filename)
+    bg_pic.fill(255)
     print("Size {}".format(main_pic.shape))
     h =  main_pic.shape[0]
     w = main_pic.shape[1]
