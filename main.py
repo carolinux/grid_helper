@@ -184,6 +184,18 @@ def save():
             return
         i+=1
 
+def export_set_up():
+    folder,name,ext = fileparts(filename)
+    # 1. output the gridded file
+    out_folder = "{}_export".format(name)
+    if not os.path.exists(out_folder):
+        os.mkdir(out_folder)
+    newfn = os.path.join(out_folder,"{}_gridded{}".format(name,ext))
+    io.imsave(newfn, main_pic)
+    # 2. output the original file
+
+    # 3. output just the grid on white
+
 
 def press(event):
     global command
@@ -199,6 +211,8 @@ def press(event):
         command="angle_needle"
     if event.key=="p":
         command="pick"
+    if event.key=="q":
+        export_set_up()
     if event.key=="v":
         command="vertical_line"
     if event.key=="h":
